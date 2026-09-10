@@ -1,0 +1,105 @@
+clip_id,gloss,split,signer_id,video_id,source_url,raw_frame_count
+help_27194_0,help,test,9,27194,https://www.youtube.com/watch?v=SiBub8VD5wo,47
+no_38482_0,no,test,9,38482,https://www.youtube.com/watch?v=1_jXxjd0lKE,80
+yes_64275_0,yes,test,9,64275,https://www.youtube.com/watch?v=BRO-oYGV224,70
+water_62479_0,water,test,9,62479,https://www.youtube.com/watch?v=A5dihMAjeTE,53
+water_70069_2,water,train,121,70069,https://www.youtube.com/watch?v=jDCw7stJaM4,104
+friend_23567_0,friend,test,9,23567,https://www.youtube.com/watch?v=lWaQxL25Aew,60
+friend_70342_2,friend,train,121,70342,https://www.youtube.com/watch?v=bq-HmgjGzmw,100
+happy_70284_1,happy,train,121,70284,https://www.youtube.com/watch?v=CSj7IScvZnE,94
+hello_27171_0,hello,val,9,27171,https://www.youtube.com/watch?v=SiBub8VD5wo,47
+hello_70017_1,hello,train,121,70017,https://www.youtube.com/watch?v=25ymRY7hbjs,82
+no_68110_2,no,val,109,68110,https://www.youtube.com/watch?v=BqmquW0f1ok,111
+help_69364_1,help,val,115,69364,http://aslbricks.org/New/ASL-Videos/help.mp4,74
+help_27206_5,help,train,36,27206,https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/help.mp4,70
+help_27207_6,help,train,4,27207,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Stamp%2C%20Help-2bSAr25HPXY.mp4,57
+help_27208_7,help,train,21,27208,https://media.asldeafined.com/vocabulary/1468580671.3652.mp4,67
+help_27209_8,help,test,17,27209,https://media.asldeafined.com/vocabulary/1471136062.8464.mp4,58
+no_69411_1,no,val,118,69411,http://aslbricks.org/New/ASL-Videos/no.mp4,66
+no_38539_4,no,train,47,38539,https://www.youtube.com/watch?v=nyUDOPmQlZQ,104
+no_38540_5,no,train,5,38540,https://www.youtube.com/watch?v=pkzfT9cYvH0,93
+no_38541_6,no,train,5,38541,https://www.youtube.com/watch?v=QJXKaOSyl4o,85
+no_38525_9,no,test,36,38525,https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/no.mp4,64
+no_38527_12,no,train,3,38527,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20No-hwa_U71nr74.mp4,45
+no_38529_15,no,train,13,38529,https://media.asldeafined.com/vocabulary/1468719269.5533.mp4,106
+no_38530_16,no,train,15,38530,https://media.asldeafined.com/vocabulary/1522767129.7038.mp4,52
+no_38524_21,no,train,56,38524,https://media.spreadthesign.com/video/mp4/13/48823.mp4,79
+no_38538_27,no,train,5,38538,https://www.youtube.com/watch?v=mskmnqYYsGw,75
+yes_69546_1,yes,val,118,69546,http://aslbricks.org/New/ASL-Videos/yes.mp4,71
+yes_64287_2,yes,val,13,64287,https://media.asldeafined.com/vocabulary/1468774983.6377.mp4,67
+yes_68192_3,yes,val,109,68192,https://www.youtube.com/watch?v=-on_5PoBEak,85
+yes_64284_5,yes,train,3,64284,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Yes-Kg0VRsnehgQ.mp4,55
+yes_64294_10,yes,train,5,64294,https://www.youtube.com/watch?v=0usayvOXzHo,59
+yes_64295_11,yes,train,5,64295,https://www.youtube.com/watch?v=3J2KaRL9i_Q,59
+yes_64296_12,yes,train,47,64296,https://www.youtube.com/watch?v=gpNDuOwyW7Q,119
+yes_64297_14,yes,test,5,64297,https://www.youtube.com/watch?v=JLNxO35tB-U,46
+yes_64280_15,yes,train,28,64280,https://media.spreadthesign.com/video/mp4/13/485639.mp4,62
+yes_64281_19,yes,train,36,64281,https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/yes.mp4,70
+yes_64288_20,yes,train,15,64288,https://media.asldeafined.com/vocabulary/1522767427.6654.mp4,53
+yes_64283_23,yes,train,4,64283,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Yes-IIWhF2S6saQ.mp4,21
+water_68179_1,water,test,109,68179,https://www.youtube.com/watch?v=HHX-yrm-DMk,67
+water_62507_7,water,train,5,62507,https://www.youtube.com/watch?v=QDlDLqvdApI,95
+water_62508_8,water,val,5,62508,https://www.youtube.com/watch?v=-SdOfxGhb0A,80
+water_62499_10,water,train,19,62499,https://elementalaslconcepts.weebly.com/uploads/2/4/4/5/24454483/water.mov,121
+water_62500_14,water,train,28,62500,https://media.spreadthesign.com/video/mp4/13/486561.mp4,110
+water_62501_15,water,val,36,62501,https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/water.mp4,65
+water_62502_16,water,train,52,62502,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Water-4xQijOap0PY.mp4,91
+water_62503_17,water,train,13,62503,https://media.asldeafined.com/vocabulary/1468927236.4055.mp4,82
+friend_23575_5,friend,val,5,23575,https://www.youtube.com/watch?v=6a571i9uA3U,105
+friend_23576_6,friend,train,5,23576,https://www.youtube.com/watch?v=6RRmIyhkMx0,73
+friend_23568_11,friend,train,37,23568,https://media.spreadthesign.com/video/mp4/13/456372.mp4,79
+friend_23569_12,friend,val,36,23569,https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/friend.mp4,96
+friend_23570_13,friend,train,70,23570,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Friend-kf4Rs2291OM.mp4,106
+friend_23572_14,friend,train,21,23572,https://media.asldeafined.com/vocabulary/1468514220.311.mp4,77
+happy_26506_0,happy,test,9,26506,https://www.youtube.com/watch?v=SiBub8VD5wo,63
+happy_26524_8,happy,train,37,26524,https://media.spreadthesign.com/video/mp4/13/456551.mp4,73
+happy_26534_10,happy,val,5,26534,https://www.youtube.com/watch?v=SHc7_8aD9Rw,55
+happy_26535_11,happy,train,5,26535,https://www.youtube.com/watch?v=ZXHHO_DY6_A,89
+happy_26525_14,happy,test,36,26525,https://s3-us-west-1.amazonaws.com/files.startasl.com/asldictionary/happy.mp4,54
+happy_26526_15,happy,train,46,26526,https://signstock.blob.core.windows.net/signschool/videos/SignSchool%20Happy.mp4,79
+happy_26527_16,happy,train,21,26527,https://media.asldeafined.com/vocabulary/1468579583.2605.mp4,81
+thank_you_57653_0,thank you,train,9,57653,https://www.youtube.com/watch?v=x6CehcknaH8,47
+thank_you_69502_1,thank you,train,115,69502,http://aslbricks.org/New/ASL-Videos/thank%20you.mp4,81
+thank_you_57663_6,thank you,val,82,57663,https://www.youtube.com/watch?v=7XHOmZYiBew,89
+thank_you_57655_9,thank you,train,46,57655,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20ThankYou-OGQTouYS3zM.mp4,74
+thank_you_57656_13,thank you,val,13,57656,https://media.asldeafined.com/vocabulary/1468944231.2757.mp4,67
+thank_you_57657_14,thank you,test,15,57657,https://media.asldeafined.com/vocabulary/1522767348.9440.mp4,65
+hello_27180_5,hello,train,64,27180,https://www.youtube.com/watch?v=DYjjcoTkNa0,112
+hello_27181_7,hello,train,5,27181,https://www.youtube.com/watch?v=FVjpLa8GqeM,53
+hello_27172_11,hello,test,46,27172,https://signstock.blob.core.windows.net/signschool/videos/db_uploads/SignSchool%20Hello-6kvCOzxP9_A.mp4,68
+hello_27173_12,hello,train,21,27173,https://media.asldeafined.com/vocabulary/1468580623.2588.mp4,57
+help_27221_4,help,train,12,27221,http://www.aslsearch.com/signs/videos/help.mp4,76
+help_65890_12,help,train,90,65890,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/HE/HELP-2562.mp4,58
+help_27213_13,help,test,10,27213,https://www.signingsavvy.com/signs/mp4/23/23431.mp4,48
+help_27214_14,help,train,11,27214,https://www.signingsavvy.com/signs/mp4/5/5871.mp4,52
+help_65891_15,help,val,90,65891,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/HE/HELP-2563.mp4,58
+help_65889_16,help,train,90,65889,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/HE/HELP-483.mp4,61
+help_27215_19,help,train,11,27215,https://www.signingsavvy.com/signs/mp4/6/6389.mp4,29
+help_27216_20,help,train,11,27216,https://www.signingsavvy.com/signs/mp4/9/9918.mp4,52
+help_27217_21,help,train,11,27217,https://www.signingsavvy.com/signs/mp4/9/9936.mp4,62
+no_38544_10,no,train,41,38544,http://www.aslsearch.com/signs/videos/no.mp4,82
+no_38532_18,no,train,10,38532,https://www.signingsavvy.com/signs/mp4/23/23547.mp4,43
+no_38533_19,no,val,10,38533,https://www.signingsavvy.com/signs/mp4/23/23949.mp4,52
+no_66183_20,no,train,102,66183,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/NO/NO-512.mp4,67
+no_38534_23,no,train,11,38534,https://www.signingsavvy.com/signs/mp4/6/6400.mp4,52
+yes_64291_6,yes,train,10,64291,https://www.signingsavvy.com/signs/mp4/23/23544.mp4,54
+yes_64292_8,yes,train,10,64292,https://www.signingsavvy.com/signs/mp4/23/23545.mp4,46
+yes_64293_9,yes,test,10,64293,https://www.signingsavvy.com/signs/mp4/23/23546.mp4,52
+yes_66820_13,yes,train,88,66820,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/YE/YES-1472.mp4,46
+yes_64300_18,yes,train,41,64300,http://www.aslsearch.com/signs/videos/yes.mp4,89
+water_62505_5,water,val,10,62505,https://www.signingsavvy.com/signs/mp4/22/22969.mp4,67
+water_62506_6,water,train,10,62506,https://www.signingsavvy.com/signs/mp4/22/22970.mp4,47
+water_66752_9,water,train,100,66752,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/WA/WATER-1414.mp4,48
+water_62510_13,water,train,12,62510,http://www.aslsearch.com/signs/videos/water.mp4,84
+friend_23574_4,friend,train,11,23574,https://www.signingsavvy.com/signs/mp4/14/14372.mp4,57
+friend_65782_7,friend,val,106,65782,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/FR/FRIEND-462.mp4,72
+friend_23578_10,friend,train,12,23578,http://www.aslsearch.com/signs/videos/friend.mp4,91
+happy_26530_4,happy,train,10,26530,https://www.signingsavvy.com/signs/mp4/23/23649.mp4,64
+happy_26531_5,happy,val,10,26531,https://www.signingsavvy.com/signs/mp4/23/23650.mp4,60
+happy_26532_6,happy,train,10,26532,https://www.signingsavvy.com/signs/mp4/23/23651.mp4,68
+happy_26537_13,happy,train,12,26537,http://www.aslsearch.com/signs/videos/happy.mp4,92
+thank_you_66598_8,thank you,train,98,66598,https://aslsignbank.haskins.yale.edu/dictionary/protected_media/glossvideo/ASL/TH/THANK-YOU-1198.mp4,66
+thank_you_57667_12,thank you,test,12,57667,http://www.aslsearch.com/signs/videos/thank.mp4,76
+thank_you_57659_16,thank you,train,11,57659,https://www.signingsavvy.com/signs/mp4/14/14353.mp4,39
+hello_27184_10,hello,train,41,27184,http://www.aslsearch.com/signs/videos/greet.mp4,91
+hello_27177_14,hello,val,11,27177,https://www.signingsavvy.com/signs/mp4/6/6353.mp4,30

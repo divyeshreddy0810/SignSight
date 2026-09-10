@@ -1,0 +1,40 @@
+gloss,video_id,instance_id,url,frame_start,frame_end,signer_id,split,reason
+help,27219,2,https://www.youtube.com/watch?v=RStYX5OXPjE,1,-1,65,val,download_failed
+help,27220,3,http://www.aslpro.com/main/h/help.swf,1,-1,30,val,download_failed
+help,27210,9,https://www.handspeak.com/word/h/help2.mp4,1,-1,14,train,download_failed
+help,27211,10,https://www.handspeak.com/word/h/help-me.mp4,1,-1,20,train,download_failed
+help,27212,11,https://www.handspeak.com/word/h/help.mp4,2,-1,20,train,download_failed
+help,67757,18,https://youtu.be/OWXmFhatan8,1,-1,109,train,download_failed
+help,27218,22,https://www.youtube.com/watch?v=l31UXgChCS4,1,-1,65,train,download_failed
+no,68406,3,https://www.youtube.com/watch?v=Dd95RFhtSs4,1,54,112,val,download_failed
+no,38542,7,http://www.aslpro.com/main/n/no.swf,1,-1,25,train,download_failed
+no,38531,17,https://www.handspeak.com/word/n/no.mp4,1,-1,20,test,download_failed
+no,67934,22,https://youtu.be/jGsh6zd3eUQ,1,-1,109,train,download_failed
+no,38536,25,https://www.youtube.com/watch?v=lgNwgl10VSg,1,-1,51,train,download_failed
+yes,64290,4,https://www.handspeak.com/word/y/yes.mp4,1,-1,14,train,download_failed
+yes,64298,16,https://www.youtube.com/watch?v=wc2A8AZepy4,1,-1,51,val,download_failed
+yes,64299,17,http://www.aslpro.com/main/y/yes.swf,1,-1,30,train,download_failed
+yes,64289,22,https://www.handspeak.com/word/y/yes-fs.mp4,1,-1,14,train,download_failed
+water,68722,3,https://www.youtube.com/watch?v=n1LXJrNY5Cs,74,126,113,train,download_failed
+water,62504,4,https://www.handspeak.com/word/w/water.mp4,1,-1,20,train,download_failed
+water,67044,11,https://youtu.be/BWUyTapkOvM,1,-1,109,train,download_failed
+water,62509,12,http://www.aslpro.com/main/w/water.swf,1,-1,72,train,download_failed
+friend,68214,1,https://www.youtube.com/watch?v=25OsRZMSydI,1,52,112,test,download_failed
+friend,68952,3,https://www.youtube.com/watch?v=uvhVws-LlfM,1,102,113,train,download_failed
+friend,67691,8,https://youtu.be/VXN_PVcYgKc,1,-1,109,train,download_failed
+friend,23577,9,http://www.aslpro.com/main/f/friend.swf,1,-1,16,train,download_failed
+friend,23573,15,https://www.handspeak.com/word/f/friend.mp4,1,-1,20,train,download_failed
+happy,26528,2,https://www.handspeak.com/word/h/happy.mp4,1,-1,14,train,download_failed
+happy,26533,7,https://www.youtube.com/watch?v=RYpAClHsBTM,1,-1,69,train,download_failed
+happy,67743,9,https://youtu.be/deGERv54kIc,1,-1,109,val,download_failed
+happy,26536,12,http://www.aslpro.com/main/h/happy.swf,1,-1,30,train,download_failed
+thank you,68796,2,https://www.youtube.com/watch?v=pj0YH_l8TNM,1,39,115,train,download_failed
+thank you,57664,7,https://www.youtube.com/watch?v=lJXvGI7r_Fc,1,-1,51,train,download_failed
+thank you,57665,10,https://www.youtube.com/watch?v=sH87G_Bz_nA,1,-1,51,train,download_failed
+thank you,57666,11,https://www.youtube.com/watch?v=t8Hr0IHghrQ,1,-1,51,train,download_failed
+thank you,57658,15,https://www.handspeak.com/word/t/thank.mp4,1,-1,14,train,download_failed
+hello,68236,2,https://www.youtube.com/watch?v=3qKcPONtNXQ,1,36,112,train,download_failed
+hello,67755,6,https://youtu.be/oRsVMK7sxMQ,1,-1,109,train,download_failed
+hello,27182,8,https://www.youtube.com/watch?v=WbkSmhKTltU,1,-1,51,train,download_failed
+hello,27183,9,http://www.aslpro.com/main/h/hello.swf,1,-1,16,train,download_failed
+hello,27175,13,https://www.handspeak.com/word/h/hello.mp4,1,-1,14,test,download_failed

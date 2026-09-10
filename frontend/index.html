@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SignSight Microservices</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+</head>
+<body class="bg-gray-900 text-white font-sans">
+    <div id="root"></div>
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // A sign is a gesture over time, not a single frame — buffer WINDOW_SIZE
+        // frames of landmarks and send the whole window for temporal classification.
+        // Fingerspelling uses a shorter window: letters are static handshapes, so
+        // ~0.4s is enough and keeps the letter feedback loop responsive.
+        const WINDOW_SIZE = 30;
+        const SPELL_WINDOW_SIZE = 10;
+        const NUM_POSE_LANDMARKS = 33;
+        const NUM_HAND_LANDMARKS = 21;
+        const LETTER_MIN_CONF = 0.35;   // ignore low-confidence letter guesses
+        const LETTER_STREAK = 2;        // windows a letter must win before committing
+        const REPEAT_COOLDOWN = 3;      // windows before the same letter may commit again
+        const WORD_GAP_WINDOWS = 3;     // consecutive hand-free windows that end a word
+
+        const App = () => {
+            const videoRef = useRef(null);
+            const canvasRef = useRef(null);
+            const vizRef = useRef(null);
+            const frameBufferRef = useRef([]);
+            const modeRef = useRef("words");
+            const spellRef = useRef({ last: "", streak: 0, committed: "", sinceCommit: 99, gap: 0, word: "", words: [] });
+            const [mode, setMode] = useState("words");
+            const [spell, setSpell] = useState({ candidate: "", conf: 0, word: "", sentence: "" });
+            const [debug, setDebug] = useState({ candidates: [], reason: "" });
+            // Calibration: capture labelled hands from THIS camera. calRef holds
+            // the live capture flag so the MediaPipe callback (a stale closure)
+            // can read it without re-subscribing.
+            const calRef = useRef({ capturing: false, letter: "" });
+            const [cal, setCal] = useState({ active: false, letter: "", counts: {}, capturing: false });
+            const [sentence, setSentence] = useState([]);
+            const [status, setStatus] = useState("Initializing Camera...");
+            const [fps, setFps] = useState(0);
+
+            // Extracts pose + both hands into a fixed-shape per-frame keypoint list.
+            // Hands use [x, y, z, 1.0] when detected, [0, 0, 0, 0] when absent from
+            // the frame (MediaPipe omits *HandLandmarks entirely when a hand isn't
+            // visible) so every frame has the same (pose+hands) keypoint count.
+            const extractFrameKeypoints = (results) => {
+                const pose = (results.poseLandmarks || []).map(lm => [lm.x, lm.y, lm.z, lm.visibility]);
+                const toHand = (landmarks) => {
+                    if (landmarks && landmarks.length === NUM_HAND_LANDMARKS) {
+                        return landmarks.map(lm => [lm.x, lm.y, lm.z, 1.0]);
+                    }
+                    return Array.from({ length: NUM_HAND_LANDMARKS }, () => [0, 0, 0, 0]);
+                };
+                return [...pose, ...toHand(results.leftHandLandmarks), ...toHand(results.rightHandLandmarks)];
+            };
+
+            const sendToGateway = async (frameWindow) => {
+                // Require at least one hand visible in most frames — otherwise this
+                // is a window with no sign content (arms down, hands off-screen).
+                const handStart = NUM_POSE_LANDMARKS;
+                const framesWithHands = frameWindow.filter(frame =>
+                    frame.slice(handStart).some(([, , , v]) => v > 0)
+                ).length;
+                if (framesWithHands / frameWindow.length < 0.5) return;
+
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/translate', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ keypoints: frameWindow })
+                    });
+                    const data = await res.json();
+                    if (data.sentence) {
+                        setSentence(prev => prev[prev.length-1] === data.sentence ? prev : [...prev, data.sentence]);
+                    }
+                } catch (e) { console.error("API Error", e); }
+            };
+
+            const refreshSpellDisplay = (candidate, conf) => {
+                const s = spellRef.current;
+                setSpell(prev => ({ candidate: candidate ?? prev.candidate, conf: conf ?? prev.conf,
+                                    word: s.word, sentence: prev.sentence }));
+            };
+
+            const composeSentence = async () => {
+                const s = spellRef.current;
+                if (!s.words.length) { setSpell(prev => ({ ...prev, sentence: "" })); return; }
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/compose', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ words: s.words })
+                    });
+                    const data = await res.json();
+                    setSpell(prev => ({ ...prev, sentence: data.sentence || "" }));
+                } catch (e) { console.error("API Error", e); }
+            };
+
+            const endWord = () => {
+                const s = spellRef.current;
+                if (s.word) { s.words.push(s.word); s.word = ""; }
+                s.last = ""; s.streak = 0; s.committed = ""; s.sinceCommit = 99;
+                refreshSpellDisplay("", 0);
+                composeSentence();
+            };
+
+            // A window with no hands is a pause: enough consecutive pauses end
+            // the current word (the fingerspelling equivalent of a space).
+            const handleSpellGap = () => {
+                const s = spellRef.current;
+                s.gap += 1;
+                if (s.gap === WORD_GAP_WINDOWS && s.word) endWord();
+            };
+
+            const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+            const sendCalibration = async (frameWindow) => {
+                const c = calRef.current;
+                if (!c.capturing || !c.letter) return;
+                c.capturing = false;                       // one window per press
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/calibrate', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ letter: c.letter, keypoints: frameWindow })
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { setStatus(`Calibration error: ${data.detail || res.status}`); return; }
+                    setCal(prev => ({ ...prev, capturing: false,
+                        counts: { ...prev.counts, [c.letter]: (prev.counts[c.letter] || 0) + data.saved } }));
+                } catch (e) {
+                    console.error("API Error", e);
+                    setStatus("Calibration error: backend unreachable");
+                }
+            };
+
+            const sendFingerspell = async (frameWindow) => {
+                const handStart = NUM_POSE_LANDMARKS;
+                const framesWithHands = frameWindow.filter(frame =>
+                    frame.slice(handStart).some(([, , , v]) => v > 0)
+                ).length;
+                if (framesWithHands / frameWindow.length < 0.5) { handleSpellGap(); return; }
+
+                try {
+                    const res = await fetch('http://127.0.0.1:8000/fingerspell', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ keypoints: frameWindow })
+                    });
+                    if (!res.ok) {
+                        // Surface backend failures (e.g. letter model not trained yet)
+                        // instead of silently recognising nothing.
+                        const detail = (await res.json().catch(() => ({}))).detail || `HTTP ${res.status}`;
+                        setStatus(`Fingerspell error: ${String(detail).slice(0, 80)}`);
+                        return;
+                    }
+                    const data = await res.json();
+                    const s = spellRef.current;
+                    // Always surface what the model saw, including on abstain —
+                    // otherwise "nothing happened" hides low confidence, an
+                    // ambiguous pair, and a lost hand behind one blank screen.
+                    setDebug({ candidates: data.candidates || [], reason: data.reason || "" });
+                    if (!data.letter || data.confidence < LETTER_MIN_CONF) { handleSpellGap(); return; }
+                    s.gap = 0;
+                    s.sinceCommit += 1;
+                    if (data.letter === s.last) s.streak += 1;
+                    else { s.last = data.letter; s.streak = 1; }
+                    // Commit on a stable streak; the same letter needs a cooldown
+                    // (hand held still re-reads forever — double letters need a beat).
+                    if (s.streak >= LETTER_STREAK &&
+                        (data.letter !== s.committed || s.sinceCommit >= REPEAT_COOLDOWN)) {
+                        s.word += data.letter;
+                        s.committed = data.letter;
+                        s.sinceCommit = 0;
+                        s.streak = 0;
+                    }
+                    refreshSpellDisplay(data.letter, data.confidence);
+                } catch (e) { console.error("API Error", e); }
+            };
+
+            useEffect(() => {
+                const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
+                
+                holistic.setOptions({
+                    modelComplexity: 1, 
+                    smoothLandmarks: true,
+                    enableSegmentation: false,
+                    minDetectionConfidence: 0.7, // Higher threshold for accuracy
+                    minTrackingConfidence: 0.7
+                });
+                
+                holistic.onResults((results) => {
+                    const canvasElement = canvasRef.current;
+                    const canvasCtx = canvasElement.getContext('2d');
+                    const videoElement = videoRef.current;
+
+                    // 1. Camera panel: clean mirrored video, no landmark clutter.
+                    canvasCtx.save();
+                    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+                    canvasCtx.translate(canvasElement.width, 0);
+                    canvasCtx.scale(-1, 1);
+                    if (videoElement.readyState === 4) { // 4 = HAVE_ENOUGH_DATA
+                        canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+                    }
+                    canvasCtx.restore();
+
+                    // 2. Visualization panel beside the camera: hands only —
+                    // the models only use hand shape, so that's all we show.
+                    // (Pose still flows to the backend for the quality gate and
+                    // body-relative normalization; it just isn't drawn.)
+                    const vizElement = vizRef.current;
+                    const vizCtx = vizElement.getContext('2d');
+                    vizCtx.save();
+                    vizCtx.fillStyle = '#0B1220';
+                    vizCtx.fillRect(0, 0, vizElement.width, vizElement.height);
+                    vizCtx.translate(vizElement.width, 0);
+                    vizCtx.scale(-1, 1);
+                    if (results.leftHandLandmarks) {
+                        drawConnectors(vizCtx, results.leftHandLandmarks, HAND_CONNECTIONS, {color: '#22D3EE', lineWidth: 3});
+                        drawLandmarks(vizCtx, results.leftHandLandmarks, {color: '#FDE047', lineWidth: 1, radius: 3});
+                    }
+                    if (results.rightHandLandmarks) {
+                        drawConnectors(vizCtx, results.rightHandLandmarks, HAND_CONNECTIONS, {color: '#34D399', lineWidth: 3});
+                        drawLandmarks(vizCtx, results.rightHandLandmarks, {color: '#FDE047', lineWidth: 1, radius: 3});
+                    }
+                    vizCtx.restore();
+
+                    if (results.poseLandmarks) {
+                        // 3. Buffer this frame's keypoints (pose + both hands). A sign
+                        // unfolds over ~1 second, so we accumulate a fixed-size window
+                        // and classify the window, not a single frame. Fingerspelling
+                        // uses a shorter window and its own route.
+                        frameBufferRef.current.push(extractFrameKeypoints(results));
+                        const spelling = modeRef.current === "spell";
+                        const windowSize = spelling ? SPELL_WINDOW_SIZE : WINDOW_SIZE;
+                        if (frameBufferRef.current.length >= windowSize) {
+                            if (calRef.current.capturing) sendCalibration(frameBufferRef.current);
+                            else (spelling ? sendFingerspell : sendToGateway)(frameBufferRef.current);
+                            frameBufferRef.current = [];
+                        }
+                    }
+                });
+
+                const camera = new Camera(videoRef.current, {
+                    onFrame: async () => { 
+                        await holistic.send({image: videoRef.current}); 
+                    },
+                    width: 640, 
+                    height: 480
+                });
+                
+                // getUserMedia only exists in a secure context. Opening this file
+                // directly (file://) is the common way to lose the camera, and the
+                // old "check permissions" message sent people to the wrong fix.
+                if (!window.isSecureContext || !navigator.mediaDevices) {
+                    setStatus("Open via http://localhost:8080 — file:// blocks the camera");
+                    return;
+                }
+                camera.start()
+                    .then(() => setStatus("System Ready - Start Signing!"))
+                    .catch(err => {
+                        console.error(err);
+                        const denied = err && (err.name === "NotAllowedError" || err.name === "SecurityError");
+                        setStatus(denied
+                            ? "Camera blocked — allow access for localhost, then reload"
+                            : `Camera unavailable: ${err && err.name ? err.name : "unknown error"}`);
+                    });
+
+            }, []);
+
+            const switchMode = (m) => {
+                modeRef.current = m;
+                frameBufferRef.current = [];
+                setMode(m);
+            };
+
+            const clearSpelling = () => {
+                spellRef.current = { last: "", streak: 0, committed: "", sinceCommit: 99, gap: 0, word: "", words: [] };
+                setSpell({ candidate: "", conf: 0, word: "", sentence: "" });
+            };
+
+            const backspace = () => {
+                const s = spellRef.current;
+                if (s.word) s.word = s.word.slice(0, -1);
+                else if (s.words.length) { s.words.pop(); composeSentence(); }
+                s.committed = ""; s.sinceCommit = 99;
+                refreshSpellDisplay();
+            };
+
+            const startCalibration = async (letter) => {
+                calRef.current = { capturing: false, letter };
+                setCal(prev => ({ ...prev, active: true, letter, capturing: false }));
+                try {
+                    const res = await fetch('http://127.0.0.1:8002/calibrate/stats');
+                    const data = await res.json();
+                    setCal(prev => ({ ...prev, counts: data.per_letter || {} }));
+                } catch (e) { /* stats are cosmetic — capture still works */ }
+            };
+
+            const captureSample = () => {
+                calRef.current.capturing = true;
+                frameBufferRef.current = [];   // capture a fresh window, not a stale tail
+                setCal(prev => ({ ...prev, capturing: true }));
+            };
+
+            const modeBtn = (m, label) => (
+                <button onClick={() => switchMode(m)}
+                    className={"px-4 py-2 rounded-lg text-sm font-semibold border " +
+                        (mode === m ? "bg-blue-600 border-blue-400 text-white"
+                                    : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700")}>
+                    {label}
+                </button>
+            );
+
+            return (
+                <div className="min-h-screen flex flex-col items-center justify-center p-6">
+                    <h1 className="text-4xl font-bold text-blue-400 mb-2">SignSight</h1>
+                    <p className="text-gray-400 mb-4">Real-Time Sign Language Translation</p>
+
+                    <div className="flex gap-2 mb-4">
+                        {modeBtn("words", "Word signs")}
+                        {modeBtn("spell", "Fingerspell")}
+                        {mode === "spell" && (
+                            <button onClick={() => cal.active
+                                        ? (calRef.current = {capturing:false, letter:""}, setCal(prev => ({...prev, active:false})))
+                                        : startCalibration("A")}
+                                className={"px-4 py-2 rounded-lg text-sm font-semibold border " +
+                                    (cal.active ? "bg-yellow-600 border-yellow-400 text-white"
+                                                : "bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700")}>
+                                {cal.active ? "Exit calibration" : "Calibrate"}
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-4 justify-center items-start">
+                        <div className="relative border-4 border-blue-500 rounded-lg overflow-hidden shadow-2xl bg-black">
+                            <video ref={videoRef} className="hidden" playsInline />
+                            <canvas ref={canvasRef} width="480" height="360" className="block"></canvas>
+                            <div className="absolute top-3 left-3 bg-black bg-opacity-80 px-3 py-1 rounded-full text-xs font-mono text-green-400 border border-green-500">
+                                ● {status}
+                            </div>
+                            <div className="absolute bottom-2 left-3 text-[10px] font-mono uppercase tracking-widest text-gray-400">Camera</div>
+                        </div>
+
+                        <div className="relative border-4 border-gray-600 rounded-lg overflow-hidden shadow-2xl" style={{background: '#0B1220'}}>
+                            <canvas ref={vizRef} width="480" height="360" className="block"></canvas>
+                            <div className="absolute bottom-2 left-3 text-[10px] font-mono uppercase tracking-widest text-gray-400">Landmark view — hands only</div>
+                            {mode === "spell" && spell.candidate && (
+                                <div className="absolute top-3 right-3 bg-black bg-opacity-80 px-4 py-2 rounded-lg text-3xl font-mono font-bold text-yellow-300 border border-yellow-500">
+                                    {spell.candidate}
+                                    <span className="text-xs text-gray-400 ml-2">{(spell.conf * 100).toFixed(0)}%</span>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {mode === "spell" && cal.active ? (
+                        <div className="mt-8 w-full max-w-2xl bg-gray-800 p-6 rounded-xl border border-yellow-700 shadow-lg">
+                            <h3 className="text-xs text-yellow-500 uppercase tracking-widest mb-1">
+                                Calibration — teach the model your camera and your hand
+                            </h3>
+                            <p className="text-xs text-gray-400 mb-4">
+                                Hold the letter shown, then press Capture. Aim for ~8 captures per letter,
+                                varying distance and angle slightly. Then retrain: <span className="font-mono">python ml/train_letters.py --calibration</span>
+                            </p>
+                            <div className="flex items-center gap-4 mb-4">
+                                <div className="text-6xl font-mono font-bold text-yellow-300 w-20 text-center">{cal.letter}</div>
+                                <div className="flex-1">
+                                    <div className="text-sm text-gray-300">
+                                        {(cal.counts[cal.letter] || 0)} frames captured for {cal.letter}
+                                    </div>
+                                    <div className="h-2 bg-gray-900 rounded mt-2 overflow-hidden">
+                                        <div className="h-full bg-yellow-400 transition-all"
+                                             style={{width: `${Math.min(100, (cal.counts[cal.letter] || 0) / 80 * 100)}%`}}></div>
+                                    </div>
+                                </div>
+                                <button onClick={captureSample} disabled={cal.capturing}
+                                    className={"px-5 py-3 rounded-lg font-semibold " +
+                                        (cal.capturing ? "bg-gray-600 text-gray-400" : "bg-yellow-600 hover:bg-yellow-500 text-white")}>
+                                    {cal.capturing ? "Capturing…" : "Capture"}
+                                </button>
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                                {ALPHABET.map(L => (
+                                    <button key={L} onClick={() => startCalibration(L)}
+                                        className={"w-8 h-8 rounded font-mono text-sm " +
+                                            (L === cal.letter ? "bg-yellow-600 text-white"
+                                             : (cal.counts[L] || 0) >= 80 ? "bg-green-800 text-green-300"
+                                             : (cal.counts[L] || 0) > 0 ? "bg-gray-600 text-gray-200" : "bg-gray-700 text-gray-500")}>
+                                        {L}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-3">
+                                Green = enough samples. Total captured: {Object.values(cal.counts).reduce((a,b)=>a+b,0)} frames
+                            </div>
+                        </div>
+                    ) : mode === "words" ? (
+                        <div className="mt-8 w-full max-w-2xl bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                            <h3 className="text-xs text-gray-400 uppercase tracking-widest mb-3">Live Translation</h3>
+                            <div className="text-2xl text-white font-medium min-h-[2rem] break-words">
+                                {sentence.join(" ") || <span className="text-gray-500 italic">Waiting for input...</span>}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="mt-8 w-full max-w-2xl bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-lg">
+                            <h3 className="text-xs text-gray-400 uppercase tracking-widest mb-3">
+                                Fingerspelling — hold each letter, drop your hand to end a word
+                            </h3>
+                            <div className="text-3xl font-mono font-bold text-yellow-300 min-h-[2.5rem] tracking-widest break-all">
+                                {spellRef.current.words.join(" ")}
+                                {spellRef.current.words.length > 0 && " "}
+                                <span className="text-white">{spell.word}</span>
+                                <span className="text-gray-500 animate-pulse">_</span>
+                            </div>
+                            <div className="text-xl text-green-300 font-medium min-h-[1.8rem] mt-2 break-words">
+                                {spell.sentence || <span className="text-gray-500 italic text-base">Sentence appears when you pause…</span>}
+                            </div>
+                            <div className="flex gap-2 mt-4">
+                                <button onClick={endWord} className="px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-sm">Space</button>
+                                <button onClick={backspace} className="px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-sm">Backspace</button>
+                                <button onClick={clearSpelling} className="px-3 py-1.5 rounded bg-gray-700 hover:bg-gray-600 text-sm">Clear</button>
+                            </div>
+
+                            <div className="mt-4 pt-3 border-t border-gray-700">
+                                <div className="text-[10px] text-gray-500 uppercase tracking-widest mb-2">
+                                    Model's top guesses {debug.reason && <span className="text-yellow-600">— holding back ({debug.reason.replace("_", " ")})</span>}
+                                </div>
+                                {debug.candidates.length === 0 ? (
+                                    <div className="text-sm text-gray-600 italic">No hand detected — check the landmark panel</div>
+                                ) : (
+                                    <div className="flex gap-3">
+                                        {debug.candidates.map((c, i) => (
+                                            <div key={c.letter} className={"flex-1 rounded px-3 py-2 " + (i === 0 ? "bg-gray-700" : "bg-gray-750 opacity-70")}>
+                                                <div className="flex items-baseline justify-between">
+                                                    <span className="text-xl font-mono font-bold text-white">{c.letter}</span>
+                                                    <span className="text-xs font-mono text-gray-400">{(c.p * 100).toFixed(0)}%</span>
+                                                </div>
+                                                <div className="h-1.5 bg-gray-900 rounded mt-1.5 overflow-hidden">
+                                                    <div className="h-full bg-yellow-400" style={{width: `${c.p * 100}%`}}></div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>

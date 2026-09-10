@@ -1,0 +1,12 @@
+.venv-ml/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+.claude/
+graphify-out/
+data/raw_videos/
+data/frames_tmp/
+data/alphabet_raw/
+data/processed_alphabet/
+data/calibration_samples.jsonl

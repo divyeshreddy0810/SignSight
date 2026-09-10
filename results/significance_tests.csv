@@ -1,0 +1,7 @@
+comparison,config_a,config_b,acc_a,acc_b,a_only_correct,b_only_correct,p_value
+hands vs arms (RF),landmark_subset/hands_only,landmark_subset/arms_only,0.5096,0.2596,33,7,0.0
+mirror vs none (RF),augmentation_rf/mirror,augmentation_rf/none,0.4615,0.5,6,10,0.4545
+RF vs GRU (no aug),augmentation_rf/none,augmentation_gru/none,0.5,0.375,22,9,0.0294
+RF vs GRU (best of each),smoothing/smoothed,smoothing/smoothed_gru,0.5481,0.3365,27,5,0.0001
+smoothed vs raw (deploy config),smoothing/smoothed,smoothing/raw,0.5481,0.5,9,4,0.2668
+v2+canonical vs v1 (deploy config),features/v2_canonical,features/v1_absolute,0.7596,0.6058,22,6,0.0037

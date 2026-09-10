@@ -1,0 +1,27 @@
+# SignSight — single project environment (Python 3.11 recommended)
+# python3.11 -m venv .venv-ml && source .venv-ml/bin/activate && pip install -r requirements.txt
+# Exact versions the reported results were produced with: requirements.lock.txt
+
+# Web framework & inter-service HTTP
+fastapi
+uvicorn
+httpx
+pydantic
+python-multipart
+
+# Data & classical ML
+numpy<2          # mediapipe 0.10.21 requires numpy 1.x
+pandas
+scikit-learn
+joblib
+matplotlib
+
+# Sequence models
+torch
+
+# Data pipeline (WLASL download + landmark extraction)
+# mediapipe pinned to the last release that ships the legacy Holistic
+# solutions API (removed in later releases).
+mediapipe==0.10.21
+opencv-python-headless
+yt-dlp

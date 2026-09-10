@@ -1,0 +1,6 @@
+config,protocol,accuracy,macro_f1,augmented,handedness_mirrored,accuracy_handedness_flipped,worst_case
+v1_screen,blocked_cv,0.946,0.9389,False,False,0.5403,0.5403
+v1_screen+aug,blocked_cv,0.9572,0.9497,True,False,0.5431,0.5431
+v1_screen+aug+mirror,blocked_cv,0.9426,0.9365,True,True,0.9424,0.9424
+v2_palmframe+aug,blocked_cv,0.9366,0.9299,True,False,0.8803,0.8803
+v2_palmframe+aug+mirror,blocked_cv,0.9371,0.9297,True,True,0.9367,0.9367
